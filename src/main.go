@@ -4,18 +4,27 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 
 	resource "github.com/quasilyte/ebitengine-resource"
 )
 
 type game struct {
-	loader *resource.Loader
+	loader     *resource.Loader
 	background *ebiten.Image
 }
 
 func newGame() *game {
 	g := &game{}
+
+	audioContext := audio.NewContext(44100)
+	loader := resource.NewLoader(audioContext)
+	loader.OpenAssetFunc = assets.OpenAssetFunc
+	assets.RegisterImageResources(loader)
+	g.loader = loader
 
 	background := ebiten.NewImage(ScreenWidth, ScreenHeight)
 	background.Fill(color.RGBA{R: 21, G: 29, B: 40, A: 1}) // #151d28
