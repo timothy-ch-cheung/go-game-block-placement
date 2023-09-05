@@ -1,4 +1,4 @@
-package game
+package config
 
 const (
 	Scale        = 2

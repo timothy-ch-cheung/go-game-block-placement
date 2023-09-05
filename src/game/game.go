@@ -4,6 +4,8 @@ import (
 	"image/color"
 
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
+	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
+	"github.com/timothy-ch-cheung/go-game-block-placement/game/objects"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -22,6 +24,7 @@ type Game struct {
 	loader        *resource.Loader
 	background    *ebiten.Image
 	renderingMode Renderer
+	board         *objects.Board
 }
 
 func NewGame() *Game {
@@ -33,11 +36,13 @@ func NewGame() *Game {
 	assets.RegisterImageResources(loader)
 	g.loader = loader
 
-	background := ebiten.NewImage(ScreenWidth, ScreenHeight)
+	background := ebiten.NewImage(config.ScreenWidth, config.ScreenHeight)
 	background.Fill(color.RGBA{R: 21, G: 29, B: 40, A: 1}) // #151d28
 	g.background = background
 
 	g.renderingMode = ISOMETRIC
+
+	g.board = objects.NewBoard(10, 10, 5, loader)
 
 	return g
 }
@@ -51,12 +56,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	switch g.renderingMode {
 	case ISOMETRIC:
-		renderIso(g, screen)
+		g.board.RenderIso(screen)
 	case TWO_DIMENSIONAL:
 		render2D(g, screen)
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return ScreenWidth, ScreenHeight
+	return config.ScreenWidth, config.ScreenHeight
 }
