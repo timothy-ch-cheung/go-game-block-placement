@@ -100,7 +100,7 @@ func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
 		}
 	}
 
-	originIso := &image.Point{X: config.ScreenWidth/2 - (w*TILE_WIDTH)/2, Y: config.ScreenHeight/2 - (h*TILE_HEIGHT)/2}
+	originIso := &image.Point{X: config.ScreenWidth/2 - (w*TILE_WIDTH)/2, Y: config.ScreenHeight/1.25 - (h*TILE_HEIGHT)/2}
 
 	return &Board{
 		data:      data,

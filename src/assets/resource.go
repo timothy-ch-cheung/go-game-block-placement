@@ -25,6 +25,9 @@ const (
 	ImgYellowCubeIso
 	ImgYellowHalfCube2D
 	ImgYellowHalfCubeIso
+	ImgViewBtn2D
+	ImgViewBtnIso
+	ImgViewBtnDisabled
 )
 
 func RegisterImageResources(loader *resource.Loader) {
@@ -43,6 +46,9 @@ func RegisterImageResources(loader *resource.Loader) {
 		ImgYellowCubeIso:     {Path: "yellow-iso-cube.png"},
 		ImgYellowHalfCube2D:  {Path: "yellow-2d-half-cube.png"},
 		ImgYellowHalfCubeIso: {Path: "yellow-iso-half-cube.png"},
+		ImgViewBtn2D:         {Path: "view-btn-2d.png"},
+		ImgViewBtnIso:        {Path: "view-btn-iso.png"},
+		ImgViewBtnDisabled:   {Path: "view-btn-disabled.png"},
 	}
 
 	for id, res := range imageResources {

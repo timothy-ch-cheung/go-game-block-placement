@@ -3,6 +3,7 @@ package game
 import (
 	"image/color"
 
+	"github.com/ebitenui/ebitenui"
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/objects"
@@ -25,6 +26,7 @@ type Game struct {
 	background    *ebiten.Image
 	renderingMode Renderer
 	board         *objects.Board
+	ui            *ebitenui.UI
 }
 
 func NewGame() *Game {
@@ -43,22 +45,24 @@ func NewGame() *Game {
 	g.renderingMode = ISOMETRIC
 
 	g.board = objects.NewBoard(10, 10, 5, loader)
+	g.ui = newUserInterface(loader)
 
 	return g
 }
 
 func (g *Game) Update() error {
+	g.ui.Update()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.background, &ebiten.DrawImageOptions{})
-
+	g.ui.Draw(screen)
 	switch g.renderingMode {
 	case ISOMETRIC:
 		g.board.RenderIso(screen)
 	case TWO_DIMENSIONAL:
-		render2D(g, screen)
+		g.board.Render2D(screen)
 	}
 }
 
