@@ -9,6 +9,10 @@ import (
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 )
 
+type Handlers struct {
+	viewToggleChangedHandler *widget.CheckboxChangedHandlerFunc
+}
+
 func newImageNineSlice(img *ebiten.Image, centerWidth int, centerHeight int) *image.NineSlice {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
@@ -17,7 +21,7 @@ func newImageNineSlice(img *ebiten.Image, centerWidth int, centerHeight int) *im
 		[3]int{(height - centerHeight) / 2, centerHeight, height - (height-centerHeight)/2 - centerHeight})
 }
 
-func newViewToggle(loader *resource.Loader) *widget.Checkbox {
+func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
 	unchecked := &widget.ButtonImageImage{
 		Idle:     loader.LoadImage(assets.ImgViewBtnIso).Data,
 		Disabled: loader.LoadImage(assets.ImgViewBtnDisabled).Data,
@@ -47,10 +51,11 @@ func newViewToggle(loader *resource.Loader) *widget.Checkbox {
 	return widget.NewCheckbox(
 		widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(image)),
 		widget.CheckboxOpts.Image(graphic),
+		widget.CheckboxOpts.StateChangedHandler(*handler),
 	)
 }
 
-func newUserInterface(loader *resource.Loader) *ebitenui.UI {
+func newUserInterface(handlers *Handlers, loader *resource.Loader) *ebitenui.UI {
 	rootContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout(widget.AnchorLayoutOpts.Padding(widget.Insets{
 			Top:    10,
@@ -59,7 +64,7 @@ func newUserInterface(loader *resource.Loader) *ebitenui.UI {
 			Right:  10,
 		}))))
 
-	rootContainer.AddChild(newViewToggle(loader))
+	rootContainer.AddChild(newViewToggle(handlers.viewToggleChangedHandler, loader))
 
 	return &ebitenui.UI{
 		Container: rootContainer,

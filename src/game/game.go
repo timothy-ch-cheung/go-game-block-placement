@@ -8,6 +8,7 @@ import (
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/objects"
 
+	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 
@@ -45,7 +46,21 @@ func NewGame() *Game {
 	g.renderingMode = ISOMETRIC
 
 	g.board = objects.NewBoard(10, 10, 5, loader)
-	g.ui = newUserInterface(loader)
+
+	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if g.renderingMode == ISOMETRIC {
+			g.renderingMode = TWO_DIMENSIONAL
+			args.Active.SetState(1)
+		} else {
+			g.renderingMode = ISOMETRIC
+			args.Active.SetState(0)
+		}
+	}
+	handlers := &Handlers{
+		viewToggleChangedHandler: &viewModeChangedHandler,
+	}
+
+	g.ui = newUserInterface(handlers, loader)
 
 	return g
 }

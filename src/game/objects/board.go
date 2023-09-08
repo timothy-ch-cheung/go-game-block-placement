@@ -30,24 +30,35 @@ type HalfCube struct {
 type Board struct {
 	data      [][]*TileStack
 	originIso *image.Point
+	origin2D  *image.Point
 }
 
-var ORIGIN_ISO = image.Point{X: config.ScreenWidth/2 - TILE_WIDTH/2, Y: config.ScreenHeight/2 - TILE_HEIGHT/2}
+var ORIGIN_ISO = image.Point{X: config.ScreenWidth/2 - TILE_WIDTH_ISO/2, Y: config.ScreenHeight/2 - TILE_HEIGHT_ISO/2}
 var ORIGIN_2D = image.Point{X: 100, Y: 100}
 
 const (
-	TILE_WIDTH  = 32
-	TILE_HEIGHT = 16
+	TILE_WIDTH_ISO  = 32
+	TILE_HEIGHT_ISO = 16
+	TILE_WIDTH_2D   = 24
+	TILE_HEIGHT_2D  = 18
 )
 
-func (ts *TileStack) render2D(screen *ebiten.Image, x int, y int) {
-
+func (ts *TileStack) render2D(screen *ebiten.Image, x int, y int, offset *image.Point) {
+	for _, tile := range ts.stack {
+		if tile != nil {
+			drawOpts := &ebiten.DrawImageOptions{}
+			drawX := offset.X + x*TILE_WIDTH_2D
+			drawY := offset.Y + y*TILE_HEIGHT_2D
+			drawOpts.GeoM.Translate(float64(drawX), float64(drawY))
+			screen.DrawImage(tile.sprite2D, drawOpts)
+		}
+	}
 }
 
 func (b *Board) Render2D(screen *ebiten.Image) {
 	for y, row := range b.data {
 		for x, tileStack := range row {
-			tileStack.render2D(screen, x, y)
+			tileStack.render2D(screen, x, y, b.origin2D)
 		}
 	}
 }
@@ -56,8 +67,8 @@ func (ts *TileStack) renderIso(screen *ebiten.Image, x int, y int, offset *image
 	for _, tile := range ts.stack {
 		if tile != nil {
 			drawOpts := &ebiten.DrawImageOptions{}
-			drawX := offset.X + (x * (TILE_WIDTH / 2)) + (y * (TILE_WIDTH / 2))
-			drawY := offset.Y + (y * (TILE_HEIGHT / 2)) - (x * (TILE_HEIGHT / 2))
+			drawX := offset.X + (x * (TILE_WIDTH_ISO / 2)) + (y * (TILE_WIDTH_ISO / 2))
+			drawY := offset.Y + (y * (TILE_HEIGHT_ISO / 2)) - (x * (TILE_HEIGHT_ISO / 2))
 			drawOpts.GeoM.Translate(float64(drawX), float64(drawY))
 			screen.DrawImage(tile.spriteIso, drawOpts)
 		}
@@ -100,10 +111,12 @@ func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
 		}
 	}
 
-	originIso := &image.Point{X: config.ScreenWidth/2 - (w*TILE_WIDTH)/2, Y: config.ScreenHeight/1.25 - (h*TILE_HEIGHT)/2}
+	originIso := &image.Point{X: config.ScreenWidth/2 - (w*TILE_WIDTH_ISO)/2, Y: config.ScreenHeight/1.25 - (h*TILE_HEIGHT_ISO)/2}
+	origin2D := &image.Point{X: config.ScreenWidth/2 - (w*TILE_WIDTH_2D)/2, Y: config.ScreenHeight/1.5 - (h*TILE_HEIGHT_2D)/2}
 
 	return &Board{
 		data:      data,
 		originIso: originIso,
+		origin2D:  origin2D,
 	}
 }
