@@ -70,7 +70,7 @@ func (b *Board) Render2D(screen *ebiten.Image) {
 		}
 	}
 	x, y := ebiten.CursorPosition()
-	hoveredObject := b.space2D.CheckCells(x, y, config.ScreenWidth, config.ScreenHeight)
+	hoveredObject := b.space2D.CheckCells(x, y, 1, 1)
 	if hoveredObject != nil {
 		drawOpts := ebiten.DrawImageOptions{}
 		drawOpts.GeoM.Translate(hoveredObject.X, hoveredObject.Y)
@@ -95,7 +95,7 @@ func (b *Board) RenderIso(screen *ebiten.Image) {
 		}
 	}
 	x, y := ebiten.CursorPosition()
-	hoveredObject := b.spaceIso.CheckCells(x, y, config.ScreenWidth, config.ScreenHeight)
+	hoveredObject := b.spaceIso.CheckCells(x, y, 1, 1)
 	if hoveredObject != nil {
 		drawOpts := ebiten.DrawImageOptions{}
 		drawOpts.GeoM.Translate(hoveredObject.X, hoveredObject.Y)
