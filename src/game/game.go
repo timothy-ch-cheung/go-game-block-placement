@@ -25,7 +25,7 @@ const (
 )
 
 type Game struct {
-	inputSystem   *input.System
+	inputSystem   input.System
 	loader        *resource.Loader
 	background    *ebiten.Image
 	renderingMode Renderer
@@ -36,6 +36,9 @@ type Game struct {
 
 func NewGame() *Game {
 	g := &Game{}
+	g.inputSystem.Init(input.SystemConfig{
+		DevicesEnabled: input.AnyDevice,
+	})
 
 	g.inputSystem.NewHandler(0, NewKeyMap())
 
@@ -64,8 +67,11 @@ func NewGame() *Game {
 			args.Active.SetState(0)
 		}
 	}
+	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+	}
 	handlers := &Handlers{
 		viewToggleChangedHandler: &viewModeChangedHandler,
+		blockSizeChangedHandler:  &blockSizeChangedHandler,
 	}
 
 	g.ui = newUserInterface(handlers, loader)

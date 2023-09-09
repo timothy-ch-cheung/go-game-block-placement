@@ -7,10 +7,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	resource "github.com/quasilyte/ebitengine-resource"
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
+	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 )
 
 type Handlers struct {
 	viewToggleChangedHandler *widget.CheckboxChangedHandlerFunc
+	blockSizeChangedHandler  *widget.CheckboxChangedHandlerFunc
 }
 
 func newImageNineSlice(img *ebiten.Image, centerWidth int, centerHeight int) *image.NineSlice {
@@ -21,18 +23,25 @@ func newImageNineSlice(img *ebiten.Image, centerWidth int, centerHeight int) *im
 		[3]int{(height - centerHeight) / 2, centerHeight, height - (height-centerHeight)/2 - centerHeight})
 }
 
-func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
+func newCheckbox(
+	handler *widget.CheckboxChangedHandlerFunc,
+	btnCheckedImg *ebiten.Image,
+	btnUncheckedImg *ebiten.Image,
+	btnDisabledImg *ebiten.Image,
+	opts ...widget.WidgetOpt,
+) *widget.Checkbox {
+
 	unchecked := &widget.ButtonImageImage{
-		Idle:     loader.LoadImage(assets.ImgViewBtnIso).Data,
-		Disabled: loader.LoadImage(assets.ImgViewBtnDisabled).Data,
+		Idle:     btnUncheckedImg,
+		Disabled: btnDisabledImg,
 	}
 	checked := &widget.ButtonImageImage{
-		Idle:     loader.LoadImage(assets.ImgViewBtn2D).Data,
-		Disabled: loader.LoadImage(assets.ImgViewBtnDisabled).Data,
+		Idle:     btnCheckedImg,
+		Disabled: btnDisabledImg,
 	}
 	greyed := &widget.ButtonImageImage{
-		Idle:     loader.LoadImage(assets.ImgViewBtnDisabled).Data,
-		Disabled: loader.LoadImage(assets.ImgViewBtnDisabled).Data,
+		Idle:     btnDisabledImg,
+		Disabled: btnDisabledImg,
 	}
 	graphic := &widget.CheckboxGraphicImage{
 		Unchecked: unchecked,
@@ -40,7 +49,7 @@ func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 		Greyed:    greyed,
 	}
 
-	checkboxImg := newImageNineSlice(loader.LoadImage(assets.ImgViewBtnDisabled).Data, 42, 14)
+	checkboxImg := newImageNineSlice(btnDisabledImg, 42, 14)
 	image := &widget.ButtonImage{
 		Idle:         checkboxImg,
 		Hover:        checkboxImg,
@@ -52,19 +61,66 @@ func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 		widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(image)),
 		widget.CheckboxOpts.Image(graphic),
 		widget.CheckboxOpts.StateChangedHandler(*handler),
+		widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.WidgetOpts(
+			opts...,
+		)),
+	)
+}
+
+func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
+	return newCheckbox(
+		handler,
+		loader.LoadImage(assets.ImgViewBtn2D).Data,
+		loader.LoadImage(assets.ImgViewBtnIso).Data,
+		loader.LoadImage(assets.ImgViewBtnDisabled).Data,
+		widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+			VerticalPosition:   widget.AnchorLayoutPositionStart,
+			HorizontalPosition: widget.AnchorLayoutPositionStart,
+		}),
+	)
+}
+
+func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
+	return newCheckbox(
+		handler,
+		loader.LoadImage(assets.ImgSizeBtnHalf).Data,
+		loader.LoadImage(assets.ImgSizeBtnFull).Data,
+		loader.LoadImage(assets.ImgSizeBtnDisabled).Data,
+		widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+			VerticalPosition:   widget.AnchorLayoutPositionEnd,
+			HorizontalPosition: widget.AnchorLayoutPositionCenter,
+		}),
 	)
 }
 
 func newUserInterface(handlers *Handlers, loader *resource.Loader) *ebitenui.UI {
 	rootContainer := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewAnchorLayout(widget.AnchorLayoutOpts.Padding(widget.Insets{
-			Top:    10,
-			Bottom: 10,
-			Left:   10,
-			Right:  10,
-		}))))
+		widget.ContainerOpts.Layout(
+			widget.NewRowLayout(widget.RowLayoutOpts.Direction(widget.DirectionVertical),
+				widget.RowLayoutOpts.Spacing(config.ScreenHeight*0.85),
+				widget.RowLayoutOpts.Padding(widget.Insets{
+					Top:    5,
+					Bottom: 5,
+					Left:   5,
+					Right:  5,
+				}),
+			),
+		),
+	)
 
-	rootContainer.AddChild(newViewToggle(handlers.viewToggleChangedHandler, loader))
+	viewContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
+	)
+	viewContainer.AddChild(newViewToggle(handlers.viewToggleChangedHandler, loader))
+	rootContainer.AddChild(viewContainer)
+
+	panelContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
+	)
+	panelContainer.AddChild(newSizeToggle(handlers.blockSizeChangedHandler, loader))
+	rootContainer.AddChild(panelContainer)
 
 	return &ebitenui.UI{
 		Container: rootContainer,
