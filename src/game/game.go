@@ -13,6 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/solarlune/resolv"
 
+	input "github.com/quasilyte/ebitengine-input"
 	resource "github.com/quasilyte/ebitengine-resource"
 )
 
@@ -24,6 +25,7 @@ const (
 )
 
 type Game struct {
+	inputSystem   *input.System
 	loader        *resource.Loader
 	background    *ebiten.Image
 	renderingMode Renderer
@@ -34,6 +36,8 @@ type Game struct {
 
 func NewGame() *Game {
 	g := &Game{}
+
+	g.inputSystem.NewHandler(0, NewKeyMap())
 
 	audioContext := audio.NewContext(44100)
 	loader := resource.NewLoader(audioContext)
@@ -71,6 +75,7 @@ func NewGame() *Game {
 
 func (g *Game) Update() error {
 	g.ui.Update()
+	g.inputSystem.Update()
 	x, y := ebiten.CursorPosition()
 	g.cursor.X = float64(x)
 	g.cursor.Y = float64(y)

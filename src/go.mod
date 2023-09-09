@@ -12,7 +12,9 @@ require (
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/quartercastle/vector v0.1.3 // indirect
+	github.com/quasilyte/ebitengine-input v0.8.0 // indirect
 	github.com/quasilyte/ebitengine-resource v0.5.0 // indirect
+	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
 	github.com/solarlune/resolv v0.6.1 // indirect
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
 	golang.org/x/image v0.10.0 // indirect
