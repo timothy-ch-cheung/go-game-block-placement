@@ -11,6 +11,7 @@ import (
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/solarlune/resolv"
 
 	resource "github.com/quasilyte/ebitengine-resource"
 )
@@ -28,6 +29,7 @@ type Game struct {
 	renderingMode Renderer
 	board         *objects.Board
 	ui            *ebitenui.UI
+	cursor        *resolv.Object
 }
 
 func NewGame() *Game {
@@ -45,7 +47,9 @@ func NewGame() *Game {
 
 	g.renderingMode = ISOMETRIC
 
-	g.board = objects.NewBoard(10, 10, 5, loader)
+	x, y := ebiten.CursorPosition()
+	g.cursor = resolv.NewObject(float64(x), float64(y), 1, 1)
+	g.board = objects.NewBoard(10, 10, 5, g.cursor, loader)
 
 	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if g.renderingMode == ISOMETRIC {
@@ -67,6 +71,9 @@ func NewGame() *Game {
 
 func (g *Game) Update() error {
 	g.ui.Update()
+	x, y := ebiten.CursorPosition()
+	g.cursor.X = float64(x)
+	g.cursor.Y = float64(y)
 	return nil
 }
 

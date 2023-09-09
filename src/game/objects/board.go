@@ -26,21 +26,13 @@ type TileStack struct {
 	stack         []*Tile
 	currentHeight int
 	maxHeight     int
-	surfaceIso    *resolv.Object
-	surface2D     *resolv.Object
-}
-
-type HalfCube struct {
-	*Tile
-	height int
 }
 
 type Board struct {
 	data                [][]*TileStack
 	originIso           *Point
 	origin2D            *Point
-	spaceIso            *resolv.Space
-	space2D             *resolv.Space
+	space               *resolv.Space
 	cursor              *resolv.Object
 	surfaceHighlight2D  *ebiten.Image
 	surfaceHighlightIso *ebiten.Image
@@ -69,11 +61,10 @@ func (b *Board) Render2D(screen *ebiten.Image) {
 			tileStack.render2D(screen)
 		}
 	}
-	x, y := ebiten.CursorPosition()
-	hoveredObject := b.space2D.CheckCells(x, y, 1, 1)
-	if hoveredObject != nil {
+
+	if check := b.cursor.Check(0, 0, "2D"); check != nil {
 		drawOpts := ebiten.DrawImageOptions{}
-		drawOpts.GeoM.Translate(hoveredObject.X, hoveredObject.Y)
+		drawOpts.GeoM.Translate(check.Objects[0].X, check.Objects[0].Y)
 		screen.DrawImage(b.surfaceHighlight2D, &drawOpts)
 	}
 }
@@ -94,11 +85,10 @@ func (b *Board) RenderIso(screen *ebiten.Image) {
 			tileStack.renderIso(screen)
 		}
 	}
-	x, y := ebiten.CursorPosition()
-	hoveredObject := b.spaceIso.CheckCells(x, y, 1, 1)
-	if hoveredObject != nil {
+
+	if check := b.cursor.Check(0, 0, "ISO"); check != nil {
 		drawOpts := ebiten.DrawImageOptions{}
-		drawOpts.GeoM.Translate(hoveredObject.X, hoveredObject.Y)
+		drawOpts.GeoM.Translate(check.Objects[0].X, check.Objects[0].Y)
 		screen.DrawImage(b.surfaceHighlightIso, &drawOpts)
 	}
 }
@@ -123,11 +113,11 @@ func newTileStack(x int, y int, maxHeight int, loader *resource.Loader) *TileSta
 }
 
 func new2DCollision(x float64, y float64) *resolv.Object {
-	return resolv.NewObject(x, y, TILE_WIDTH_2D, TILE_HEIGHT_2D)
+	return resolv.NewObject(x, y, TILE_WIDTH_2D, TILE_HEIGHT_2D, "2D")
 }
 
 func newIsoCollision(x float64, y float64) *resolv.Object {
-	object := resolv.NewObject(x, y, TILE_WIDTH_2D, TILE_HEIGHT_2D)
+	object := resolv.NewObject(x, y, TILE_WIDTH_2D, TILE_HEIGHT_2D, "ISO")
 	object.SetShape(resolv.NewConvexPolygon(
 		x, y,
 		TILE_WIDTH_ISO/2, 0,
@@ -138,7 +128,7 @@ func newIsoCollision(x float64, y float64) *resolv.Object {
 	return object
 }
 
-func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
+func NewBoard(w int, h int, d int, cursor *resolv.Object, loader *resource.Loader) *Board {
 	data := make([][]*TileStack, w)
 
 	originIso := &Point{
@@ -149,8 +139,7 @@ func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
 		X: float64(config.ScreenWidth)/2 - float64(w*TILE_WIDTH_2D)/2,
 		Y: float64(config.ScreenHeight)/1.5 - float64(h*TILE_HEIGHT_2D)/2,
 	}
-	spaceIso := resolv.NewSpace(config.ScreenWidth, config.ScreenHeight, 1, 1)
-	space2D := resolv.NewSpace(config.ScreenWidth, config.ScreenHeight, 1, 1)
+	space := resolv.NewSpace(config.ScreenWidth, config.ScreenHeight, 1, 1)
 
 	for y := range data {
 		data[y] = make([]*TileStack, h)
@@ -160,15 +149,13 @@ func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
 				X: originIso.X + float64((x*(TILE_WIDTH_ISO/2))+(y*(TILE_WIDTH_ISO/2))),
 				Y: originIso.Y + float64((y*(TILE_HEIGHT_ISO/2))-(x*(TILE_HEIGHT_ISO/2))),
 			}
-			tileStack.surfaceIso = newIsoCollision(tileStack.stack[0].pointIso.X, tileStack.stack[0].pointIso.Y)
-			spaceIso.Add(tileStack.surfaceIso)
+			space.Add(newIsoCollision(tileStack.stack[0].pointIso.X, tileStack.stack[0].pointIso.Y))
 
 			tileStack.stack[0].point2D = &Point{
 				X: origin2D.X + float64(x*TILE_WIDTH_2D),
 				Y: origin2D.Y + float64(y*TILE_HEIGHT_2D),
 			}
-			tileStack.surface2D = new2DCollision(tileStack.stack[0].point2D.X, tileStack.stack[0].point2D.Y)
-			space2D.Add(tileStack.surface2D)
+			space.Add(new2DCollision(tileStack.stack[0].point2D.X, tileStack.stack[0].point2D.Y))
 
 			data[y][x] = tileStack
 		}
@@ -177,13 +164,15 @@ func NewBoard(w int, h int, d int, loader *resource.Loader) *Board {
 	surfaceHighlightIso := loader.LoadImage(assets.ImgHoverIso).Data
 	surfaceHighlight2D := loader.LoadImage(assets.ImgHover2D).Data
 
+	space.Add(cursor)
+
 	return &Board{
 		data:                data,
 		originIso:           originIso,
 		origin2D:            origin2D,
-		spaceIso:            spaceIso,
-		space2D:             space2D,
+		space:               space,
 		surfaceHighlightIso: surfaceHighlightIso,
 		surfaceHighlight2D:  surfaceHighlight2D,
+		cursor:              cursor,
 	}
 }
