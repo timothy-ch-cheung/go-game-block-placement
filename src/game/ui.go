@@ -77,7 +77,7 @@ func newCheckbox(
 		Greyed:    greyed,
 	}
 
-	checkboxImg := newImageNineSlice(btnDisabledImg, 42, 14)
+	checkboxImg := newImageNineSlice(btnDisabledImg, 16, 16)
 	image := &widget.ButtonImage{
 		Idle:         checkboxImg,
 		Hover:        checkboxImg,
@@ -85,14 +85,25 @@ func newCheckbox(
 		PressedHover: checkboxImg,
 		Disabled:     checkboxImg,
 	}
-	return widget.NewCheckbox(
-		widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(image)),
-		widget.CheckboxOpts.Image(graphic),
-		widget.CheckboxOpts.StateChangedHandler(*handler),
-		widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.WidgetOpts(
-			opts...,
-		)),
-	)
+
+	if handler == nil {
+		return widget.NewCheckbox(
+			widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(image)),
+			widget.CheckboxOpts.Image(graphic),
+			widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.WidgetOpts(
+				opts...,
+			)),
+		)
+	} else {
+		return widget.NewCheckbox(
+			widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(image)),
+			widget.CheckboxOpts.Image(graphic),
+			widget.CheckboxOpts.StateChangedHandler(*handler),
+			widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.WidgetOpts(
+				opts...,
+			)),
+		)
+	}
 }
 
 func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
@@ -121,6 +132,55 @@ func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 	)
 }
 
+func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
+	container := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout()),
+	)
+	var checkboxes []*widget.Checkbox
+
+	cursorBlock := newCheckbox(nil,
+		loader.LoadImage(assets.ImgCursorBtnSelected).Data,
+		loader.LoadImage(assets.ImgCursorBtnIdle).Data,
+		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
+	)
+	container.AddChild(cursorBlock)
+	checkboxes = append(checkboxes, cursorBlock)
+
+	blueBlock := newCheckbox(nil,
+		loader.LoadImage(assets.ImgBlueBlockBtnSelected).Data,
+		loader.LoadImage(assets.ImgBlueBlockBtnIdle).Data,
+		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
+	)
+	container.AddChild(blueBlock)
+	checkboxes = append(checkboxes, blueBlock)
+
+	redBlock := newCheckbox(nil,
+		loader.LoadImage(assets.ImgRedBlockBtnSelected).Data,
+		loader.LoadImage(assets.ImgRedBlockBtnIdle).Data,
+		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
+	)
+	container.AddChild(redBlock)
+	checkboxes = append(checkboxes, redBlock)
+
+	yellowBlock := newCheckbox(nil,
+		loader.LoadImage(assets.ImgYellowBlockBtnSelected).Data,
+		loader.LoadImage(assets.ImgYellowBlockBtnIdle).Data,
+		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
+	)
+	container.AddChild(yellowBlock)
+	checkboxes = append(checkboxes, yellowBlock)
+
+	elements := []widget.RadioGroupElement{}
+	for _, cb := range checkboxes {
+		elements = append(elements, cb)
+	}
+
+	widget.NewRadioGroup(
+		widget.RadioGroupOpts.Elements(elements...),
+	)
+	return container
+}
+
 func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	rootContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(
@@ -146,15 +206,26 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	viewContainer.AddChild(viewToggle)
 	rootContainer.AddChild(viewContainer)
 
-	panelContainer := widget.NewContainer(
+	panelLayout := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
 	)
+	panelContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Spacing(20),
+		)),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+			StretchVertical: true,
+		})),
+	)
+	panelLayout.AddChild(panelContainer)
+
 	blockSize := FULL
 	blockSizeToggle := newSizeToggle(handlers.blockSizeChangedHandler, loader)
 	blockSizeToggle.SetState(widget.WidgetState(blockSize))
 	panelContainer.AddChild(blockSizeToggle)
-	rootContainer.AddChild(panelContainer)
+	panelContainer.AddChild(newBlockColourRadioBtns(loader))
+	rootContainer.AddChild(panelLayout)
 
 	ui := &ebitenui.UI{
 		Container: rootContainer,
