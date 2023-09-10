@@ -15,6 +15,19 @@ type Handlers struct {
 	blockSizeChangedHandler  *widget.CheckboxChangedHandlerFunc
 }
 
+type UI struct {
+	ebitenUI *ebitenui.UI
+	renderer Renderer
+}
+
+func (ui *UI) update() {
+	ui.ebitenUI.Update()
+}
+
+func (ui *UI) draw(screen *ebiten.Image) {
+	ui.ebitenUI.Draw(screen)
+}
+
 func newImageNineSlice(img *ebiten.Image, centerWidth int, centerHeight int) *image.NineSlice {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
@@ -93,7 +106,7 @@ func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 	)
 }
 
-func newUserInterface(handlers *Handlers, loader *resource.Loader) *ebitenui.UI {
+func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	rootContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(
 			widget.NewRowLayout(widget.RowLayoutOpts.Direction(widget.DirectionVertical),
@@ -108,11 +121,14 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *ebitenui.UI 
 		),
 	)
 
+	renderer := ISOMETRIC
 	viewContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
 	)
-	viewContainer.AddChild(newViewToggle(handlers.viewToggleChangedHandler, loader))
+	viewToggle := newViewToggle(handlers.viewToggleChangedHandler, loader)
+	viewToggle.SetState(widget.WidgetState(renderer))
+	viewContainer.AddChild(viewToggle)
 	rootContainer.AddChild(viewContainer)
 
 	panelContainer := widget.NewContainer(
@@ -122,7 +138,12 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *ebitenui.UI 
 	panelContainer.AddChild(newSizeToggle(handlers.blockSizeChangedHandler, loader))
 	rootContainer.AddChild(panelContainer)
 
-	return &ebitenui.UI{
+	ui := &ebitenui.UI{
 		Container: rootContainer,
+	}
+
+	return &UI{
+		ebitenUI: ui,
+		renderer: renderer,
 	}
 }

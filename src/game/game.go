@@ -3,7 +3,6 @@ package game
 import (
 	"image/color"
 
-	"github.com/ebitenui/ebitenui"
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/objects"
@@ -25,13 +24,12 @@ const (
 )
 
 type Game struct {
-	inputSystem   input.System
-	loader        *resource.Loader
-	background    *ebiten.Image
-	renderingMode Renderer
-	board         *objects.Board
-	ui            *ebitenui.UI
-	cursor        *resolv.Object
+	inputSystem input.System
+	loader      *resource.Loader
+	background  *ebiten.Image
+	board       *objects.Board
+	ui          *UI
+	cursor      *resolv.Object
 }
 
 func NewGame() *Game {
@@ -52,20 +50,17 @@ func NewGame() *Game {
 	background.Fill(color.RGBA{R: 21, G: 29, B: 40, A: 1}) // #151d28
 	g.background = background
 
-	g.renderingMode = ISOMETRIC
-
 	x, y := ebiten.CursorPosition()
 	g.cursor = resolv.NewObject(float64(x), float64(y), 1, 1)
 	g.board = objects.NewBoard(10, 10, 5, g.cursor, loader)
 
 	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
-		if g.renderingMode == ISOMETRIC {
-			g.renderingMode = TWO_DIMENSIONAL
-			args.Active.SetState(1)
+		if g.ui.renderer == ISOMETRIC {
+			g.ui.renderer = TWO_DIMENSIONAL
 		} else {
-			g.renderingMode = ISOMETRIC
-			args.Active.SetState(0)
+			g.ui.renderer = ISOMETRIC
 		}
+		args.Active.SetState(widget.WidgetState(g.ui.renderer))
 	}
 	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 	}
@@ -80,7 +75,7 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	g.ui.Update()
+	g.ui.update()
 	g.inputSystem.Update()
 	x, y := ebiten.CursorPosition()
 	g.cursor.X = float64(x)
@@ -90,8 +85,8 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.background, &ebiten.DrawImageOptions{})
-	g.ui.Draw(screen)
-	switch g.renderingMode {
+	g.ui.draw(screen)
+	switch g.ui.renderer {
 	case ISOMETRIC:
 		g.board.RenderIso(screen)
 	case TWO_DIMENSIONAL:
