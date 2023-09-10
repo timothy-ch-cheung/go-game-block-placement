@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
@@ -55,12 +56,14 @@ func NewGame() *Game {
 		}
 	}
 	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		fmt.Println("CHANGED")
 		if g.ui.blockSize == HALF {
 			g.ui.blockSize = FULL
 		} else {
 			g.ui.blockSize = HALF
 		}
 	}
+
 	handlers := &Handlers{
 		viewToggleChangedHandler: &viewModeChangedHandler,
 		blockSizeChangedHandler:  &blockSizeChangedHandler,

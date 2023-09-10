@@ -24,15 +24,25 @@ const (
 	FULL
 )
 
+type BlockOperation int
+
+const (
+	SELECT BlockOperation = iota
+	PLACE_BLUE
+	PLACE_RED
+	PLACE_YELLOW
+)
+
 type Handlers struct {
 	viewToggleChangedHandler *widget.CheckboxChangedHandlerFunc
 	blockSizeChangedHandler  *widget.CheckboxChangedHandlerFunc
 }
 
 type UI struct {
-	ebitenUI  *ebitenui.UI
-	renderer  Renderer
-	blockSize BlockSize
+	ebitenUI       *ebitenui.UI
+	renderer       Renderer
+	blockSize      BlockSize
+	blockOperation *BlockOperation
 }
 
 func (ui *UI) update() {
@@ -122,8 +132,8 @@ func newViewToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.Loader) *widget.Checkbox {
 	return newCheckbox(
 		handler,
-		loader.LoadImage(assets.ImgSizeBtnHalf).Data,
 		loader.LoadImage(assets.ImgSizeBtnFull).Data,
+		loader.LoadImage(assets.ImgSizeBtnHalf).Data,
 		loader.LoadImage(assets.ImgSizeBtnDisabled).Data,
 		widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 			VerticalPosition:   widget.AnchorLayoutPositionEnd,
@@ -132,13 +142,20 @@ func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 	)
 }
 
-func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
+func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *BlockOperation) {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout()),
 	)
 	var checkboxes []*widget.Checkbox
+	blockOperation := SELECT
 
-	cursorBlock := newCheckbox(nil,
+	var cursorBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if int(args.State) > 0 {
+			blockOperation = SELECT
+		}
+	}
+	cursorBlock := newCheckbox(
+		&cursorBlockChanged,
 		loader.LoadImage(assets.ImgCursorBtnSelected).Data,
 		loader.LoadImage(assets.ImgCursorBtnIdle).Data,
 		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
@@ -146,7 +163,13 @@ func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
 	container.AddChild(cursorBlock)
 	checkboxes = append(checkboxes, cursorBlock)
 
-	blueBlock := newCheckbox(nil,
+	var blueBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if int(args.State) > 0 {
+			blockOperation = PLACE_BLUE
+		}
+	}
+	blueBlock := newCheckbox(
+		&blueBlockChanged,
 		loader.LoadImage(assets.ImgBlueBlockBtnSelected).Data,
 		loader.LoadImage(assets.ImgBlueBlockBtnIdle).Data,
 		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
@@ -154,7 +177,13 @@ func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
 	container.AddChild(blueBlock)
 	checkboxes = append(checkboxes, blueBlock)
 
-	redBlock := newCheckbox(nil,
+	var redBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if int(args.State) > 0 {
+			blockOperation = PLACE_RED
+		}
+	}
+	redBlock := newCheckbox(
+		&redBlockChanged,
 		loader.LoadImage(assets.ImgRedBlockBtnSelected).Data,
 		loader.LoadImage(assets.ImgRedBlockBtnIdle).Data,
 		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
@@ -162,7 +191,13 @@ func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
 	container.AddChild(redBlock)
 	checkboxes = append(checkboxes, redBlock)
 
-	yellowBlock := newCheckbox(nil,
+	var yellowBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if int(args.State) > 0 {
+			blockOperation = PLACE_YELLOW
+		}
+	}
+	yellowBlock := newCheckbox(
+		&yellowBlockChanged,
 		loader.LoadImage(assets.ImgYellowBlockBtnSelected).Data,
 		loader.LoadImage(assets.ImgYellowBlockBtnIdle).Data,
 		loader.LoadImage(assets.ImgPanelBtnDisabled).Data,
@@ -175,10 +210,12 @@ func newBlockColourRadioBtns(loader *resource.Loader) *widget.Container {
 		elements = append(elements, cb)
 	}
 
-	widget.NewRadioGroup(
+	radioGroup := widget.NewRadioGroup(
 		widget.RadioGroupOpts.Elements(elements...),
 	)
-	return container
+	radioGroup.SetActive(elements[0])
+
+	return container, &blockOperation
 }
 
 func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
@@ -220,11 +257,14 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	)
 	panelLayout.AddChild(panelContainer)
 
-	blockSize := FULL
+	blockSize := HALF
 	blockSizeToggle := newSizeToggle(handlers.blockSizeChangedHandler, loader)
 	blockSizeToggle.SetState(widget.WidgetState(blockSize))
 	panelContainer.AddChild(blockSizeToggle)
-	panelContainer.AddChild(newBlockColourRadioBtns(loader))
+
+	blockOperationContainer, blockOperation := newBlockColourRadioBtns(loader)
+	panelContainer.AddChild(blockOperationContainer)
+
 	rootContainer.AddChild(panelLayout)
 
 	ui := &ebitenui.UI{
@@ -232,8 +272,9 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	}
 
 	return &UI{
-		ebitenUI:  ui,
-		renderer:  renderer,
-		blockSize: blockSize,
+		ebitenUI:       ui,
+		renderer:       renderer,
+		blockSize:      blockSize,
+		blockOperation: blockOperation,
 	}
 }
