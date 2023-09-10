@@ -1,12 +1,12 @@
 package game
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/objects"
+	"github.com/timothy-ch-cheung/go-game-block-placement/ui"
 
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -49,18 +49,17 @@ func NewGame() *Game {
 	g.board = objects.NewBoard(10, 10, 5, g.cursor, loader)
 
 	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
-		if g.ui.renderer == ISOMETRIC {
-			g.ui.renderer = TWO_DIMENSIONAL
+		if g.ui.renderer == ui.ISOMETRIC {
+			g.ui.renderer = ui.TWO_DIMENSIONAL
 		} else {
-			g.ui.renderer = ISOMETRIC
+			g.ui.renderer = ui.ISOMETRIC
 		}
 	}
 	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
-		fmt.Println("CHANGED")
-		if g.ui.blockSize == HALF {
-			g.ui.blockSize = FULL
+		if g.ui.blockSize == ui.HALF {
+			g.ui.blockSize = ui.FULL
 		} else {
-			g.ui.blockSize = HALF
+			g.ui.blockSize = ui.HALF
 		}
 	}
 
@@ -77,9 +76,7 @@ func NewGame() *Game {
 func (g *Game) Update() error {
 	g.ui.update()
 	g.inputSystem.Update()
-	x, y := ebiten.CursorPosition()
-	g.cursor.X = float64(x)
-	g.cursor.Y = float64(y)
+	g.board.Update(g.ui.renderer)
 	return nil
 }
 
@@ -87,9 +84,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.background, &ebiten.DrawImageOptions{})
 	g.ui.draw(screen)
 	switch g.ui.renderer {
-	case ISOMETRIC:
+	case ui.ISOMETRIC:
 		g.board.RenderIso(screen)
-	case TWO_DIMENSIONAL:
+	case ui.TWO_DIMENSIONAL:
 		g.board.Render2D(screen)
 	}
 }

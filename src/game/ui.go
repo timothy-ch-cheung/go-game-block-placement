@@ -8,29 +8,7 @@ import (
 	resource "github.com/quasilyte/ebitengine-resource"
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
-)
-
-type Renderer int
-
-const (
-	ISOMETRIC Renderer = iota
-	TWO_DIMENSIONAL
-)
-
-type BlockSize int
-
-const (
-	HALF BlockSize = iota
-	FULL
-)
-
-type BlockOperation int
-
-const (
-	SELECT BlockOperation = iota
-	PLACE_BLUE
-	PLACE_RED
-	PLACE_YELLOW
+	"github.com/timothy-ch-cheung/go-game-block-placement/ui"
 )
 
 type Handlers struct {
@@ -40,9 +18,9 @@ type Handlers struct {
 
 type UI struct {
 	ebitenUI       *ebitenui.UI
-	renderer       Renderer
-	blockSize      BlockSize
-	blockOperation *BlockOperation
+	renderer       ui.Renderer
+	blockSize      ui.BlockSize
+	blockOperation *ui.BlockOperation
 }
 
 func (ui *UI) update() {
@@ -142,16 +120,16 @@ func newSizeToggle(handler *widget.CheckboxChangedHandlerFunc, loader *resource.
 	)
 }
 
-func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *BlockOperation) {
+func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *ui.BlockOperation) {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout()),
 	)
 	var checkboxes []*widget.Checkbox
-	blockOperation := SELECT
+	blockOperation := ui.SELECT
 
 	var cursorBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if int(args.State) > 0 {
-			blockOperation = SELECT
+			blockOperation = ui.SELECT
 		}
 	}
 	cursorBlock := newCheckbox(
@@ -165,7 +143,7 @@ func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *Block
 
 	var blueBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if int(args.State) > 0 {
-			blockOperation = PLACE_BLUE
+			blockOperation = ui.PLACE_BLUE
 		}
 	}
 	blueBlock := newCheckbox(
@@ -179,7 +157,7 @@ func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *Block
 
 	var redBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if int(args.State) > 0 {
-			blockOperation = PLACE_RED
+			blockOperation = ui.PLACE_RED
 		}
 	}
 	redBlock := newCheckbox(
@@ -193,7 +171,7 @@ func newBlockColourRadioBtns(loader *resource.Loader) (*widget.Container, *Block
 
 	var yellowBlockChanged widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if int(args.State) > 0 {
-			blockOperation = PLACE_YELLOW
+			blockOperation = ui.PLACE_YELLOW
 		}
 	}
 	yellowBlock := newCheckbox(
@@ -233,7 +211,7 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 		),
 	)
 
-	renderer := ISOMETRIC
+	renderer := ui.ISOMETRIC
 	viewContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
@@ -257,7 +235,7 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	)
 	panelLayout.AddChild(panelContainer)
 
-	blockSize := HALF
+	blockSize := ui.HALF
 	blockSizeToggle := newSizeToggle(handlers.blockSizeChangedHandler, loader)
 	blockSizeToggle.SetState(widget.WidgetState(blockSize))
 	panelContainer.AddChild(blockSizeToggle)

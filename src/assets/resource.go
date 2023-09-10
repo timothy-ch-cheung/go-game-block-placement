@@ -40,8 +40,6 @@ const (
 	ImgSizeBtnFull
 	ImgSizeBtnHalf
 	ImgSizeBtnDisabled
-	ImgHover2D
-	ImgHoverIso
 )
 
 func RegisterImageResources(loader *resource.Loader) {
@@ -75,8 +73,6 @@ func RegisterImageResources(loader *resource.Loader) {
 		ImgSizeBtnFull:            {Path: "size-btn-full.png"},
 		ImgSizeBtnHalf:            {Path: "size-btn-half.png"},
 		ImgSizeBtnDisabled:        {Path: "size-btn-disabled.png"},
-		ImgHover2D:                {Path: "hover-2d.png"},
-		ImgHoverIso:               {Path: "hover-iso.png"},
 	}
 
 	for id, res := range imageResources {
