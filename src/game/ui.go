@@ -10,14 +10,29 @@ import (
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
 )
 
+type Renderer int
+
+const (
+	ISOMETRIC Renderer = iota
+	TWO_DIMENSIONAL
+)
+
+type BlockSize int
+
+const (
+	HALF BlockSize = iota
+	FULL
+)
+
 type Handlers struct {
 	viewToggleChangedHandler *widget.CheckboxChangedHandlerFunc
 	blockSizeChangedHandler  *widget.CheckboxChangedHandlerFunc
 }
 
 type UI struct {
-	ebitenUI *ebitenui.UI
-	renderer Renderer
+	ebitenUI  *ebitenui.UI
+	renderer  Renderer
+	blockSize BlockSize
 }
 
 func (ui *UI) update() {
@@ -135,7 +150,10 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
 	)
-	panelContainer.AddChild(newSizeToggle(handlers.blockSizeChangedHandler, loader))
+	blockSize := FULL
+	blockSizeToggle := newSizeToggle(handlers.blockSizeChangedHandler, loader)
+	blockSizeToggle.SetState(widget.WidgetState(blockSize))
+	panelContainer.AddChild(blockSizeToggle)
 	rootContainer.AddChild(panelContainer)
 
 	ui := &ebitenui.UI{
@@ -143,7 +161,8 @@ func newUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	}
 
 	return &UI{
-		ebitenUI: ui,
-		renderer: renderer,
+		ebitenUI:  ui,
+		renderer:  renderer,
+		blockSize: blockSize,
 	}
 }

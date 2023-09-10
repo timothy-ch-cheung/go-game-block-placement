@@ -16,13 +16,6 @@ import (
 	resource "github.com/quasilyte/ebitengine-resource"
 )
 
-type Renderer int
-
-const (
-	ISOMETRIC Renderer = iota
-	TWO_DIMENSIONAL
-)
-
 type Game struct {
 	inputSystem input.System
 	loader      *resource.Loader
@@ -60,9 +53,13 @@ func NewGame() *Game {
 		} else {
 			g.ui.renderer = ISOMETRIC
 		}
-		args.Active.SetState(widget.WidgetState(g.ui.renderer))
 	}
 	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
+		if g.ui.blockSize == HALF {
+			g.ui.blockSize = FULL
+		} else {
+			g.ui.blockSize = HALF
+		}
 	}
 	handlers := &Handlers{
 		viewToggleChangedHandler: &viewModeChangedHandler,
