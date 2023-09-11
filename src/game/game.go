@@ -22,7 +22,7 @@ type Game struct {
 	loader      *resource.Loader
 	background  *ebiten.Image
 	board       *objects.Board
-	ui          *UI
+	ui          *ui.UI
 	cursor      *resolv.Object
 }
 
@@ -49,41 +49,41 @@ func NewGame() *Game {
 	g.board = objects.NewBoard(10, 10, 5, g.cursor, loader)
 
 	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
-		if g.ui.renderer == ui.ISOMETRIC {
-			g.ui.renderer = ui.TWO_DIMENSIONAL
+		if g.ui.State.Renderer == ui.ISOMETRIC {
+			g.ui.State.Renderer = ui.TWO_DIMENSIONAL
 		} else {
-			g.ui.renderer = ui.ISOMETRIC
+			g.ui.State.Renderer = ui.ISOMETRIC
 		}
 	}
 	var blockSizeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
-		if g.ui.blockSize == ui.HALF {
-			g.ui.blockSize = ui.FULL
+		if g.ui.State.BlockSize == ui.HALF {
+			g.ui.State.BlockSize = ui.FULL
 		} else {
-			g.ui.blockSize = ui.HALF
+			g.ui.State.BlockSize = ui.HALF
 		}
 	}
 
-	handlers := &Handlers{
-		viewToggleChangedHandler: &viewModeChangedHandler,
-		blockSizeChangedHandler:  &blockSizeChangedHandler,
+	handlers := &ui.Handlers{
+		ViewToggleChangedHandler: &viewModeChangedHandler,
+		BlockSizeChangedHandler:  &blockSizeChangedHandler,
 	}
 
-	g.ui = newUserInterface(handlers, loader)
+	g.ui = ui.NewUserInterface(handlers, loader)
 
 	return g
 }
 
 func (g *Game) Update() error {
-	g.ui.update()
+	g.ui.Update()
 	g.inputSystem.Update()
-	g.board.Update(g.ui.renderer)
+	g.board.Update(g.ui.State.Renderer)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.background, &ebiten.DrawImageOptions{})
-	g.ui.draw(screen)
-	switch g.ui.renderer {
+	g.ui.Draw(screen)
+	switch g.ui.State.Renderer {
 	case ui.ISOMETRIC:
 		g.board.RenderIso(screen)
 	case ui.TWO_DIMENSIONAL:

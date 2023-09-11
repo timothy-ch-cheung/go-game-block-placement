@@ -51,7 +51,7 @@ const (
 )
 
 func coordTag(x int, y int) string {
-	return fmt.Sprintf("%d%d", x, y)
+	return fmt.Sprintf("%d-%d", x, y)
 }
 
 func stackKey(tags []string) string {
