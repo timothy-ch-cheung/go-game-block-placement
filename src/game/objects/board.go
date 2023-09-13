@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	input "github.com/quasilyte/ebitengine-input"
 	"github.com/solarlune/resolv"
 	"github.com/timothy-ch-cheung/go-game-block-placement/assets"
 	"github.com/timothy-ch-cheung/go-game-block-placement/game/config"
@@ -21,7 +22,7 @@ type Point struct {
 type Tile struct {
 	sprite2D  *ebiten.Image
 	spriteIso *ebiten.Image
-	height    int
+	height    ui.BlockSize
 	pointIso  *Point
 	point2D   *Point
 }
@@ -41,13 +42,18 @@ type Board struct {
 	origin2D          *Point
 	space             *resolv.Space
 	cursor            *resolv.Object
+	loader            *resource.Loader
 }
 
 const (
-	TILE_WIDTH_ISO  = 32
-	TILE_HEIGHT_ISO = 16
-	TILE_WIDTH_2D   = 24
-	TILE_HEIGHT_2D  = 18
+	TILE_WIDTH_ISO      = 32
+	TILE_HEIGHT_ISO     = 16
+	TILE_FULL_DEPTH_ISO = 17
+	TILE_HALF_DEPTH_ISO = 9
+	TILE_WIDTH_2D       = 24
+	TILE_HEIGHT_2D      = 18
+	TILE_FULL_DEPTH_2D  = 14
+	TILE_HALF_DEPTH_2D  = 7
 )
 
 func coordTag(x int, y int) string {
@@ -56,6 +62,24 @@ func coordTag(x int, y int) string {
 
 func stackKey(tags []string) string {
 	return strings.Join(tags[:], ",")
+}
+
+func (ts *TileStack) addTile(blockSize ui.BlockSize, blockOperation ui.BlockOperation, loader *resource.Loader) {
+	currentBlock := ts.stack[ts.currentIndex]
+	newBlock := newBlockTile(blockSize, blockOperation, loader)
+
+	yIncrementIso := TILE_FULL_DEPTH_ISO
+	yIncrement2D := TILE_FULL_DEPTH_2D
+	if blockSize == ui.HALF {
+		yIncrementIso = TILE_HALF_DEPTH_ISO
+		yIncrement2D = TILE_HALF_DEPTH_2D
+	}
+
+	newBlock.pointIso = &Point{X: currentBlock.pointIso.X, Y: currentBlock.pointIso.Y - float64(yIncrementIso)}
+	newBlock.point2D = &Point{X: currentBlock.point2D.X, Y: currentBlock.point2D.Y - float64(yIncrement2D)}
+	ts.stack = append(ts.stack, newBlock)
+	ts.currentHeight += newBlock.height.GetHeight()
+	ts.currentIndex += 1
 }
 
 func (ts *TileStack) render2D(screen *ebiten.Image) {
@@ -100,7 +124,7 @@ func (b *Board) RenderIso(screen *ebiten.Image) {
 	}
 }
 
-func (b *Board) Update(renderingMode ui.Renderer) {
+func (b *Board) Update(state *ui.State, handler *input.Handler) {
 	x, y := ebiten.CursorPosition()
 	b.cursor.X = float64(x)
 	b.cursor.Y = float64(y)
@@ -109,14 +133,20 @@ func (b *Board) Update(renderingMode ui.Renderer) {
 			tileStack.isHovered = false
 		}
 	}
-	if check := b.cursor.Check(0, 0, "ISO"); check != nil && renderingMode == ui.ISOMETRIC {
+	if check := b.cursor.Check(0, 0, "ISO"); check != nil && state.Renderer == ui.ISOMETRIC {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
+			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
+				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			}
 		}
 	}
-	if check := b.cursor.Check(0, 0, "2D"); check != nil && renderingMode == ui.TWO_DIMENSIONAL {
+	if check := b.cursor.Check(0, 0, "2D"); check != nil && state.Renderer == ui.TWO_DIMENSIONAL {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
+			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
+				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			}
 		}
 	}
 }
@@ -125,18 +155,54 @@ func newGroundTile(loader *resource.Loader) *Tile {
 	return &Tile{
 		sprite2D:  loader.LoadImage(assets.ImgGround2D).Data,
 		spriteIso: loader.LoadImage(assets.ImgGroundIso).Data,
-		height:    0,
+		height:    ui.FLAT,
+	}
+}
+
+func newBlockTile(blockSize ui.BlockSize, blockOperation ui.BlockOperation, loader *resource.Loader) *Tile {
+	var sprite2D *ebiten.Image
+	var spriteIso *ebiten.Image
+	switch true {
+	case (blockOperation == ui.PLACE_BLUE && blockSize == ui.HALF):
+		sprite2D = loader.LoadImage(assets.ImgBlueHalfCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgBlueHalfCubeIso).Data
+
+	case (blockOperation == ui.PLACE_RED && blockSize == ui.HALF):
+		sprite2D = loader.LoadImage(assets.ImgRedHalfCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgRedHalfCubeIso).Data
+
+	case (blockOperation == ui.PLACE_YELLOW && blockSize == ui.HALF):
+		sprite2D = loader.LoadImage(assets.ImgYellowHalfCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgYellowHalfCubeIso).Data
+
+	case (blockOperation == ui.PLACE_BLUE && blockSize == ui.FULL):
+		sprite2D = loader.LoadImage(assets.ImgBlueCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgBlueCubeIso).Data
+
+	case (blockOperation == ui.PLACE_RED && blockSize == ui.FULL):
+		sprite2D = loader.LoadImage(assets.ImgRedCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgRedCubeIso).Data
+
+	case (blockOperation == ui.PLACE_YELLOW && blockSize == ui.FULL):
+		sprite2D = loader.LoadImage(assets.ImgYellowCube2D).Data
+		spriteIso = loader.LoadImage(assets.ImgYellowCubeIso).Data
+	}
+
+	return &Tile{
+		sprite2D:  sprite2D,
+		spriteIso: spriteIso,
+		height:    blockSize,
 	}
 }
 
 func newTileStack(x int, y int, maxHeight int, loader *resource.Loader) *TileStack {
-	stack := make([]*Tile, maxHeight)
+	stack := make([]*Tile, 1, maxHeight)
 	stack[0] = newGroundTile(loader)
 
 	return &TileStack{
 		stack:         stack,
 		currentIndex:  0,
-		currentHeight: stack[0].height,
+		currentHeight: stack[0].height.GetHeight(),
 		maxHeight:     maxHeight,
 	}
 }
@@ -176,18 +242,14 @@ func NewBoard(w int, h int, d int, cursor *resolv.Object, loader *resource.Loade
 		for x := range data[y] {
 			tileStack := newTileStack(x, y, d, loader)
 
-			tileStack.stack[0].pointIso = &Point{
-				X: originIso.X + float64((x*(TILE_WIDTH_ISO/2))+(y*(TILE_WIDTH_ISO/2))),
-				Y: originIso.Y + float64((y*(TILE_HEIGHT_ISO/2))-(x*(TILE_HEIGHT_ISO/2))),
-			}
+			xIso, yIso := calculateIsoCoord(originIso, x, y)
+			tileStack.stack[0].pointIso = &Point{X: xIso, Y: yIso}
 			collisionIso := newIsoCollision(tileStack.stack[0].pointIso.X, tileStack.stack[0].pointIso.Y, coordTag(x, y))
 			space.Add(collisionIso)
 			objectToTileStack[stackKey(collisionIso.Tags())] = tileStack
 
-			tileStack.stack[0].point2D = &Point{
-				X: origin2D.X + float64(x*TILE_WIDTH_2D),
-				Y: origin2D.Y + float64(y*TILE_HEIGHT_2D),
-			}
+			x2D, y2D := calculate2DCoord(origin2D, x, y)
+			tileStack.stack[0].point2D = &Point{X: x2D, Y: y2D}
 			collision2D := new2DCollision(tileStack.stack[0].point2D.X, tileStack.stack[0].point2D.Y, coordTag(x, y))
 			space.Add(collision2D)
 			objectToTileStack[stackKey(collision2D.Tags())] = tileStack
@@ -205,5 +267,18 @@ func NewBoard(w int, h int, d int, cursor *resolv.Object, loader *resource.Loade
 		origin2D:          origin2D,
 		space:             space,
 		cursor:            cursor,
+		loader:            loader,
 	}
+}
+
+func calculateIsoCoord(originIso *Point, x int, y int) (float64, float64) {
+	xIso := originIso.X + float64((x*(TILE_WIDTH_ISO/2))+(y*(TILE_WIDTH_ISO/2)))
+	yIso := originIso.Y + float64((y*(TILE_HEIGHT_ISO/2))-(x*(TILE_HEIGHT_ISO/2)))
+	return xIso, yIso
+}
+
+func calculate2DCoord(origin2D *Point, x int, y int) (float64, float64) {
+	x2D := origin2D.X + float64(x*TILE_WIDTH_2D)
+	y2D := origin2D.Y + float64(y*TILE_HEIGHT_2D)
+	return x2D, y2D
 }

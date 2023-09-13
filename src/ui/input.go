@@ -1,4 +1,4 @@
-package game
+package ui
 
 import (
 	input "github.com/quasilyte/ebitengine-input"

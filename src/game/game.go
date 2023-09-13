@@ -18,12 +18,13 @@ import (
 )
 
 type Game struct {
-	inputSystem input.System
-	loader      *resource.Loader
-	background  *ebiten.Image
-	board       *objects.Board
-	ui          *ui.UI
-	cursor      *resolv.Object
+	inputSystem  input.System
+	inputHandler *input.Handler
+	loader       *resource.Loader
+	background   *ebiten.Image
+	board        *objects.Board
+	ui           *ui.UI
+	cursor       *resolv.Object
 }
 
 func NewGame() *Game {
@@ -32,7 +33,7 @@ func NewGame() *Game {
 		DevicesEnabled: input.AnyDevice,
 	})
 
-	g.inputSystem.NewHandler(0, NewKeyMap())
+	g.inputHandler = g.inputSystem.NewHandler(0, ui.NewKeyMap())
 
 	audioContext := audio.NewContext(44100)
 	loader := resource.NewLoader(audioContext)
@@ -76,7 +77,7 @@ func NewGame() *Game {
 func (g *Game) Update() error {
 	g.ui.Update()
 	g.inputSystem.Update()
-	g.board.Update(g.ui.State.Renderer)
+	g.board.Update(g.ui.State, g.inputHandler)
 	return nil
 }
 
