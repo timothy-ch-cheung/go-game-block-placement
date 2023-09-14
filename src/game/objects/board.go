@@ -117,9 +117,9 @@ func (ts *TileStack) renderIso(screen *ebiten.Image) {
 }
 
 func (b *Board) RenderIso(screen *ebiten.Image) {
-	for _, row := range b.data {
-		for _, tileStack := range row {
-			tileStack.renderIso(screen)
+	for j := 0; j < len(b.data); j++ {
+		for i := len(b.data[j]) - 1; i >= 0; i-- {
+			b.data[j][i].renderIso(screen)
 		}
 	}
 }
