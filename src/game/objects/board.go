@@ -82,6 +82,16 @@ func (ts *TileStack) addTile(blockSize ui.BlockSize, blockOperation ui.BlockOper
 	ts.currentIndex += 1
 }
 
+func (ts *TileStack) deleteTopTile() {
+	if ts.currentIndex < 1 {
+		return
+	}
+	ts.currentHeight -= ts.stack[ts.currentIndex].height.GetHeight()
+	ts.stack = ts.stack[:len(ts.stack)-1]
+	ts.currentIndex -= 1
+
+}
+
 func (ts *TileStack) render2D(screen *ebiten.Image) {
 	for _, tile := range ts.stack {
 		if tile != nil {
@@ -138,6 +148,8 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 			tileStack.isHovered = true
 			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
 				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
+				tileStack.deleteTopTile()
 			}
 		}
 	}
@@ -146,6 +158,8 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 			tileStack.isHovered = true
 			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
 				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
+				tileStack.deleteTopTile()
 			}
 		}
 	}
@@ -233,7 +247,7 @@ func NewBoard(w int, h int, d int, cursor *resolv.Object, loader *resource.Loade
 	}
 	origin2D := &Point{
 		X: float64(config.ScreenWidth)/2 - float64(w*TILE_WIDTH_2D)/2,
-		Y: float64(config.ScreenHeight)/1.5 - float64(h*TILE_HEIGHT_2D)/2,
+		Y: float64(config.ScreenHeight)/1.75 - float64(h*TILE_HEIGHT_2D)/2,
 	}
 	space := resolv.NewSpace(config.ScreenWidth, config.ScreenHeight, 1, 1)
 

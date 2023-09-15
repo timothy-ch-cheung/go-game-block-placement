@@ -47,7 +47,7 @@ func NewGame() *Game {
 
 	x, y := ebiten.CursorPosition()
 	g.cursor = resolv.NewObject(float64(x), float64(y), 1, 1)
-	g.board = objects.NewBoard(10, 10, 5, g.cursor, loader)
+	g.board = objects.NewBoard(15, 15, 5, g.cursor, loader)
 
 	var viewModeChangedHandler widget.CheckboxChangedHandlerFunc = func(args *widget.CheckboxChangedEventArgs) {
 		if g.ui.State.Renderer == ui.ISOMETRIC {
