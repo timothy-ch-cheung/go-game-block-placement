@@ -43,6 +43,7 @@ type Board struct {
 	space             *resolv.Space
 	cursor            *resolv.Object
 	loader            *resource.Loader
+	maxHeight         int
 }
 
 const (
@@ -134,6 +135,11 @@ func (b *Board) RenderIso(screen *ebiten.Image) {
 	}
 }
 
+func (b *Board) canPlaceBlock(tileStack *TileStack, state *ui.State) bool {
+	size := state.BlockSize.GetHeight()
+	return tileStack.currentHeight+size <= b.maxHeight && *state.BlockOperation != ui.SELECT
+}
+
 func (b *Board) Update(state *ui.State, handler *input.Handler) {
 	x, y := ebiten.CursorPosition()
 	b.cursor.X = float64(x)
@@ -143,10 +149,11 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 			tileStack.isHovered = false
 		}
 	}
+
 	if check := b.cursor.Check(0, 0, "ISO"); check != nil && state.Renderer == ui.ISOMETRIC {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
-			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
+			if handler.ActionIsJustPressed(ui.ActionSelect) && b.canPlaceBlock(tileStack, state) {
 				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
 				tileStack.deleteTopTile()
@@ -156,7 +163,7 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 	if check := b.cursor.Check(0, 0, "2D"); check != nil && state.Renderer == ui.TWO_DIMENSIONAL {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
-			if handler.ActionIsJustPressed(ui.ActionSelect) && *state.BlockOperation != ui.SELECT {
+			if handler.ActionIsJustPressed(ui.ActionSelect) && b.canPlaceBlock(tileStack, state) {
 				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
 				tileStack.deleteTopTile()
@@ -282,6 +289,7 @@ func NewBoard(w int, h int, d int, cursor *resolv.Object, loader *resource.Loade
 		space:             space,
 		cursor:            cursor,
 		loader:            loader,
+		maxHeight:         d * 2,
 	}
 }
 
