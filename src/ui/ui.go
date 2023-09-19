@@ -224,20 +224,33 @@ func NewUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	)
 
 	renderer := ISOMETRIC
-	viewContainer := widget.NewContainer(
+	topPanelLayout := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
+	)
+	topPanelContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Spacing(250),
+		)),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+			StretchVertical: true,
+		})),
 	)
 	viewToggle := newViewToggle(handlers.ViewToggleChangedHandler, loader)
 	viewToggle.SetState(widget.WidgetState(renderer))
-	viewContainer.AddChild(viewToggle)
-	rootContainer.AddChild(viewContainer)
+	topPanelContainer.AddChild(viewToggle)
 
-	panelLayout := widget.NewContainer(
+	alertText := newAlertText("MAX HEIGHT REACHED!", color.White, loader)
+	topPanelContainer.AddChild(alertText.widget)
+
+	topPanelLayout.AddChild(topPanelContainer)
+	rootContainer.AddChild(topPanelLayout)
+
+	bottomPanelLayout := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true})),
 	)
-	panelContainer := widget.NewContainer(
+	bottomPanelContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Spacing(20),
 		)),
@@ -245,20 +258,17 @@ func NewUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 			StretchVertical: true,
 		})),
 	)
-	panelLayout.AddChild(panelContainer)
+	bottomPanelLayout.AddChild(bottomPanelContainer)
 
 	blockSize := HALF
 	blockSizeToggle := newSizeToggle(handlers.BlockSizeChangedHandler, loader)
 	blockSizeToggle.SetState(widget.WidgetState(blockSize))
-	panelContainer.AddChild(blockSizeToggle)
+	bottomPanelContainer.AddChild(blockSizeToggle)
 
 	blockOperationContainer, blockOperation := newBlockColourRadioBtns(loader)
-	panelContainer.AddChild(blockOperationContainer)
+	bottomPanelContainer.AddChild(blockOperationContainer)
 
-	alertText := newAlertText("MAX HEIGHT REACHED!", color.White, loader)
-	panelContainer.AddChild(alertText.widget)
-
-	rootContainer.AddChild(panelLayout)
+	rootContainer.AddChild(bottomPanelLayout)
 
 	ui := &ebitenui.UI{
 		Container: rootContainer,

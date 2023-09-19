@@ -156,7 +156,7 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 			if handler.ActionIsJustPressed(ui.ActionSelect) {
 				if b.canPlaceBlock(tileStack, state) {
 					tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
-				} else {
+				} else if *state.BlockOperation != ui.SELECT {
 					state.AnimateAlert = true
 				}
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
@@ -170,7 +170,7 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 			if handler.ActionIsJustPressed(ui.ActionSelect) {
 				if b.canPlaceBlock(tileStack, state) {
 					tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
-				} else {
+				} else if *state.BlockOperation != ui.SELECT {
 					state.AnimateAlert = true
 				}
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
