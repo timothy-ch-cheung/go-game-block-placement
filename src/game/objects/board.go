@@ -153,8 +153,12 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 	if check := b.cursor.Check(0, 0, "ISO"); check != nil && state.Renderer == ui.ISOMETRIC {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
-			if handler.ActionIsJustPressed(ui.ActionSelect) && b.canPlaceBlock(tileStack, state) {
-				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			if handler.ActionIsJustPressed(ui.ActionSelect) {
+				if b.canPlaceBlock(tileStack, state) {
+					tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+				} else {
+					state.AnimateAlert = true
+				}
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
 				tileStack.deleteTopTile()
 			}
@@ -163,8 +167,12 @@ func (b *Board) Update(state *ui.State, handler *input.Handler) {
 	if check := b.cursor.Check(0, 0, "2D"); check != nil && state.Renderer == ui.TWO_DIMENSIONAL {
 		if tileStack := b.objectToTileStack[stackKey(check.Objects[0].Tags())]; tileStack != nil {
 			tileStack.isHovered = true
-			if handler.ActionIsJustPressed(ui.ActionSelect) && b.canPlaceBlock(tileStack, state) {
-				tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+			if handler.ActionIsJustPressed(ui.ActionSelect) {
+				if b.canPlaceBlock(tileStack, state) {
+					tileStack.addTile(state.BlockSize, *state.BlockOperation, b.loader)
+				} else {
+					state.AnimateAlert = true
+				}
 			} else if handler.ActionIsJustPressed(ui.ActionDelete) {
 				tileStack.deleteTopTile()
 			}

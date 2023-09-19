@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"image/color"
+
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
@@ -19,15 +21,22 @@ type State struct {
 	Renderer       Renderer
 	BlockSize      BlockSize
 	BlockOperation *BlockOperation
+	AnimateAlert   bool
 }
 
 type UI struct {
-	ebitenUI *ebitenui.UI
-	State    *State
+	ebitenUI  *ebitenui.UI
+	State     *State
+	AlertText *AlertText
 }
 
 func (ui *UI) Update() {
 	ui.ebitenUI.Update()
+	if ui.State.AnimateAlert {
+		ui.AlertText.Animate()
+	}
+	ui.AlertText.update()
+	ui.State.AnimateAlert = false
 }
 
 func (ui *UI) Draw(screen *ebiten.Image) {
@@ -246,6 +255,9 @@ func NewUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	blockOperationContainer, blockOperation := newBlockColourRadioBtns(loader)
 	panelContainer.AddChild(blockOperationContainer)
 
+	alertText := newAlertText("MAX HEIGHT REACHED!", color.White, loader)
+	panelContainer.AddChild(alertText.widget)
+
 	rootContainer.AddChild(panelLayout)
 
 	ui := &ebitenui.UI{
@@ -259,7 +271,8 @@ func NewUserInterface(handlers *Handlers, loader *resource.Loader) *UI {
 	}
 
 	return &UI{
-		ebitenUI: ui,
-		State:    state,
+		ebitenUI:  ui,
+		State:     state,
+		AlertText: alertText,
 	}
 }

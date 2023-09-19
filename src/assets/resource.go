@@ -81,6 +81,20 @@ func RegisterImageResources(loader *resource.Loader) {
 	}
 }
 
+const (
+	FontDefault resource.FontID = iota
+)
+
+func RegisterFontResources(loader *resource.Loader) {
+	fontResources := map[resource.FontID]resource.FontInfo{
+		FontDefault: {Path: "fibberish.ttf", Size: 12},
+	}
+	for id, res := range fontResources {
+		loader.FontRegistry.Set(id, res)
+		loader.LoadFont(id)
+	}
+}
+
 func OpenAssetFunc(path string) io.ReadCloser {
 	f, err := gameAssets.Open("resources/" + path)
 	if err != nil {

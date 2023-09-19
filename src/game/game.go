@@ -39,6 +39,7 @@ func NewGame() *Game {
 	loader := resource.NewLoader(audioContext)
 	loader.OpenAssetFunc = assets.OpenAssetFunc
 	assets.RegisterImageResources(loader)
+	assets.RegisterFontResources(loader)
 	g.loader = loader
 
 	background := ebiten.NewImage(config.ScreenWidth, config.ScreenHeight)
@@ -75,9 +76,9 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	g.ui.Update()
 	g.inputSystem.Update()
 	g.board.Update(g.ui.State, g.inputHandler)
+	g.ui.Update()
 	return nil
 }
 
