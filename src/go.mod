@@ -1,6 +1,6 @@
 module github.com/timothy-ch-cheung/go-game-block-placement
 
-go 1.18
+go 1.22
 
 require (
 	github.com/ebitengine/purego v0.4.0 // indirect
